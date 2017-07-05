@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <style type="text/css">
+
+    </style>
+</head>
+<body>
+<h1>在输入框中输入后按下enter键将通过websocket返回输入的值得toupercase</h1>
+<input id="text" type="text"/>
+<script src="./javascripts/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript">
+    $.ajax({
+      url: 'http://192.168.0.141:3000/login',
+      method: 'get',
+      success: function (data) {
+        doNext(data)
+      }
+    })
+    function doNext(uuid) {
+      let ws = new WebSocket('ws://192.168.0.141:8001/'+uuid)
+      window.addEventListener("load", function(){
+        if(Notification && Notification.permission !== "granted"){
+          Notification.requestPermission(function(status){
+            if(Notification.permission !== status){
+              Notification.permission = status;
+            }
+          });
+        }
+      });
+      ws.onopen = function () {
+        console.log('connected')
+        document.addEventListener('keydown', function (ev) {
+          if(ev.keyCode === 13){
+            ws.send(document.querySelector('#text').value)
+          }
+        })
+      }
+      ws.onmessage = function (doc) {
+        var options={
+          lang: "utf-8",
+          icon: "images/favicon.ico",
+          body: doc.data,
+          delay: 1000
+        };
+        var n = new Notification("新消息：", options);
+        setTimeout(function () {
+          n.close()
+        }, 1000)
+        n.onshow = function(){
+          console.log("You got me!");
+        };
+        n.onclick = function() {
+          alert("You clicked me!");
+          window.location = "http://www.baidu.com";
+        };
+        n.onclose = function(){
+          console.log("notification closed!");
+        };
+        n.onerror = function() {
+          console.log("An error accured");
+        }
+      }
+    }
+</script>
+</body>
+</html>
